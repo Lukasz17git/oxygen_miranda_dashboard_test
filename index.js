@@ -23,7 +23,11 @@ class Booking {
    }
    get fee() {
       if (!this.room) throw "booking is not assigned to any room, please add it to a room"
-      return this.room.price * (100 - this.room.discount) * (100 - this.discount)
+      const isInt = (number) => Number.isInteger(number)
+      if (!isInt(this.room.price) || !isInt(this.room.discount) || !isInt(this.discount)) throw "price and discounts should be an integer"
+      if (this.room.discount > 100 || this.discount > 100) throw 'discounts should be lower than 100'
+      if (this.room.discount < 0 || this.discount < 0 || this.room.price < 0) throw 'discounts and price cant be negative'
+      return Math.round((this.room.price * (100 - this.room.discount) * (100 - this.discount)) / 10000)
    }
    addRoom(room) {
       if (!(room instanceof Room)) throw `Provided room: ${room} is not an instance of Room class`
@@ -95,7 +99,7 @@ class Room {
       const currentDate = new Date()
 
       const validStartDate = startDate instanceof Date ? startDate : currentDate
-      const validEndDate = endDate instanceof Date ? endDate : startDate > currentDate ? startDate : currentDate
+      const validEndDate = (endDate instanceof Date && endDate >= startDate) ? endDate : startDate > currentDate ? startDate : currentDate
 
       const startIntegerDay = getDayFromDate(validStartDate)
       const endIntegerDay = getDayFromDate(validEndDate)
@@ -137,34 +141,29 @@ class Room {
       const occupancyMap = this.calculateOcupancyMap(startDayAsInteger, endDayAsInteger)
       const totalDays = endDayAsInteger - startDayAsInteger + 1
       const totalOccupiedDays = Object.keys(occupancyMap).length
-      const percentage = totalOccupiedDays / totalDays * 100
+      const percentage = Math.round(totalOccupiedDays / totalDays * 100)
       return percentage
    }
 
    static totalOccupancyPercentage(rooms, startDate, endDate) {
-      if (!rooms.length) return null
+      if (!Array.isArray(rooms) || !rooms.length) return null
       const [startDayAsInteger, endDayAsInteger] = Room.calculateStartAndEndDayAsInteger(startDate, endDate)
-      const totalAddedPercentage = 0
+      let totalAddedPercentage = 0
       for (const room of rooms) {
+         if (!(room instanceof Room)) throw `Provided room: ${room} is not an instance of Room class`
          const occupancyPercentage = room.occupancyPercentage(startDayAsInteger, endDayAsInteger)
          totalAddedPercentage += occupancyPercentage
-         /*
-         otra forma sería con los Object.keys(occupancyPercentage) de cada room, pushearlos en un array
-         común, y por último hacer un set => const occupiedDays = new Set(occupiedDaysOfAllRooms).size
-         const occupancyMap = room.calculateOcupancyMap(startDayAsInteger, endDayAsInteger)
-         totalOccupiedDays.push(Object.keys(occupancyMap))
-         */
       }
-      const totalPercentage = totalAddedPercentage / rooms.length
-
+      const totalPercentage = Math.round(totalAddedPercentage / rooms.length)
       return totalPercentage
    }
 
    static availableRooms(rooms, startDate, endDate) { //he supuesto que quieres rooms vacias en todos los dias de ese intervalo
-      if (!rooms.length) return null
+      if (!Array.isArray(rooms)) return null
       const [startDayAsInteger, endDayAsInteger] = Room.calculateStartAndEndDayAsInteger(startDate, endDate)
       const availableRooms = []
       for (const room of rooms) {
+         if (!(room instanceof Room)) throw `Provided room: ${room} is not an instance of Room class`
          const occupancyMap = room.calculateOcupancyMap(startDayAsInteger, endDayAsInteger)
          if (Object.keys(occupancyMap).length === 0) availableRooms.push(room)
       }
