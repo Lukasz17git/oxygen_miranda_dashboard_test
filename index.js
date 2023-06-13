@@ -1,16 +1,5 @@
 const { v4: nanoid } = require('uuid')
 
-// this.name = typeof name === 'string' ? name : ''
-// this.price = typeof price !== 'number' ? 0 : price < 0 ? 0 : parseInt(price, 10) || 0
-// this.discount = typeof discount !== 'number' ? 0 : discount > 100 ? 100 : discount < 0 ? 0 : parseInt(discount, 10) || 0
-
-// this.name = typeof name === 'string' ? name : ''
-// this.email = typeof email === 'string' ? email : ''
-// this.checkIn = checkIn instanceof Date ? checkIn : new Date()
-// this.checkOut = checkOut instanceof Date ? checkOut : new Date()
-// this.discount = typeof discount !== 'number' ? 0 : discount > 100 ? 100 : discount < 0 ? 0 : parseInt(discount, 10) || 0
-
-
 class Booking {
    constructor({ name = '', email = '', checkIn = new Date(), checkOut = null, discount = 0 } = {}) {
       this.id = nanoid()
@@ -29,11 +18,13 @@ class Booking {
       if (this.room.discount < 0 || this.discount < 0 || this.room.price < 0) throw 'discounts and price cant be negative'
       return Math.round((this.room.price * (100 - this.room.discount) * (100 - this.discount)) / 10000)
    }
+
    addRoom(room) {
       if (!(room instanceof Room)) throw `Provided room: ${room} is not an instance of Room class`
       room.addBooking(this)
       return this
    }
+
    removeRoom() {
       if (!this.room) throw 'There is no room inside Booking'
       this.room.removeBooking(this.id)
@@ -130,10 +121,9 @@ class Room {
    }
 
    isOccupied(date) {
-      const [startDayAsInteger] = Room.calculateStartAndEndDayAsInteger(date) //default current day
+      const [startDayAsInteger] = Room.calculateStartAndEndDayAsInteger(date)
       const occupancyMap = this.calculateOcupancyMap(startDayAsInteger)
-      console.log(occupancyMap)
-      return !!occupancyMap[startDayAsInteger] //same as: occupancyMap[startDayAsInteger] ? true : false
+      return !!occupancyMap[startDayAsInteger]
    }
 
    occupancyPercentage(startDate, endDate) {
@@ -158,7 +148,7 @@ class Room {
       return totalPercentage
    }
 
-   static availableRooms(rooms, startDate, endDate) { //he supuesto que quieres rooms vacias en todos los dias de ese intervalo
+   static availableRooms(rooms, startDate, endDate) {
       if (!Array.isArray(rooms)) return null
       const [startDayAsInteger, endDayAsInteger] = Room.calculateStartAndEndDayAsInteger(startDate, endDate)
       const availableRooms = []
@@ -169,21 +159,6 @@ class Room {
       }
       return availableRooms
    }
-
-   // esto lo hubiese mergeado con el otro, pero lo he dejado así para que se entienda mejor
-   static partialyAvailableRooms(rooms, startDate, endDate) {
-      if (!rooms.length) return null
-      const [startDayAsInteger, endDayAsInteger] = Room.calculateStartAndEndDayAsInteger(startDate, endDate)
-      const numberOfDays = endDayAsInteger - startDayAsInteger + 1
-      const partialyAvailableRooms = []
-      for (const room of rooms) {
-         const occupancyMap = room.calculateOcupancyMap(startDayAsInteger, endDayAsInteger)
-         const numberOfOccupiedDays = Object.keys(occupancyMap).length
-         if (numberOfOccupiedDays !== numberOfDays) partialyAvailableRooms.push(room)
-      }
-      return partialyAvailableRooms
-   }
-
 }
 
 

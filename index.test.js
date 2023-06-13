@@ -1,7 +1,6 @@
 const { Room, Booking } = require("./index")
 
 
-
 const notBooking = {
    id: 'the_id',
    name: 'Booking',
@@ -15,9 +14,7 @@ const day = 24 * 60 * 60 * 1000
 const daysAgo = (days) => new Date(Date.now() - days * day)
 const daysInFuture = (days) => new Date(Date.now() + days * day)
 
-/**
- * ROOM TEST
- */
+
 test('Room class constructor', () => {
 
    // Default Room
@@ -390,7 +387,6 @@ test('availableRooms should return [] if there is no available rooms', () => {
    expect(Room.availableRooms(rooms, daysAgo(2), daysAgo(1))).toEqual([])
    expect(Room.availableRooms(rooms, daysAgo(2), daysAgo(5))).toEqual([])
 })
-
 
 test('availableRooms should return the available rooms if there is an available room across all choosen days', () => {
    const room1 = new Room().addBooking(new Booking({ checkIn: daysAgo(1) }))
