@@ -1,4 +1,6 @@
-const { Room, Booking } = require("./index")
+// const { Room, Booking } = require("./index")
+
+import { Room, Booking } from './index'
 
 
 const notBooking = {
@@ -11,8 +13,8 @@ const notBooking = {
    room: null
 }
 const day = 24 * 60 * 60 * 1000
-const daysAgo = (days) => new Date(Date.now() - days * day)
-const daysInFuture = (days) => new Date(Date.now() + days * day)
+const daysAgo = (days: number) => new Date(Date.now() - days * day)
+const daysInFuture = (days: number) => new Date(Date.now() + days * day)
 
 
 test('Room class constructor', () => {
@@ -51,12 +53,14 @@ test('addBooking method should add a booking and add a property called room to t
    expect(room.addBooking(booking)).toBe(room)
    expect(room.addBooking(booking).bookings).toBe(room.bookings)
    expect(room.addBooking(booking).bookings.at(-1)).toBe(booking)
-   expect(room.addBooking(booking).bookings.at(-1).room).toBe(room)
+   expect(room.addBooking(booking).bookings.at(-1)?.room).toBe(room)
 })
 
 test('addBooking method should throw if the provided Booking is not an instance of Booking', () => {
    const room = new Room()
+   //@ts-ignore
    expect(() => room.addBooking({})).toThrow()
+   //@ts-ignore
    expect(() => room.addBooking(notBooking)).toThrow()
 })
 
@@ -67,12 +71,14 @@ test('addBookings method should add all the bookings and add a property called r
    expect(room.addBookings([booking, booking2])).toBe(room)
    expect(room.addBookings([booking, booking2]).bookings).toBe(room.bookings)
    expect(room.addBookings([booking, booking2]).bookings.at(-1)).toBe(booking2)
-   expect(room.addBookings([booking, booking2]).bookings.at(-1).room).toBe(room)
+   expect(room.addBookings([booking, booking2]).bookings.at(-1)?.room).toBe(room)
 })
 
 test('addBookings method should throw if the provided Bookings is not an array of Booking instances', () => {
    const room = new Room()
+   //@ts-ignore
    expect(() => room.addBooking([])).toThrow()
+   //@ts-ignore
    expect(() => room.addBooking([notBooking])).toThrow()
 })
 
@@ -245,12 +251,15 @@ test('occupancyPercentage will count ending date as current date if ending date 
 
 test('totalOccupancyPercentage should return null if there is no rooms provided as argument', () => {
    expect(Room.totalOccupancyPercentage()).toBe(null)
+   //@ts-ignore
    expect(Room.totalOccupancyPercentage(null, daysAgo(2), daysAgo(1))).toBe(null)
    expect(Room.totalOccupancyPercentage([])).toBe(null)
 })
 
 test('totalOccupancyPercentage should throw an error if there is at least one no-room inside rooms array', () => {
+   //@ts-ignore
    expect(() => Room.totalOccupancyPercentage([{}])).toThrow()
+   //@ts-ignore
    expect(() => Room.totalOccupancyPercentage([new Room(), {}])).toThrow()
 })
 
@@ -331,11 +340,12 @@ test('totalOccupancyPercentage should return a rounded integer, between 0 and 10
 
 test('availableRooms should return null if there is no rooms provided as argument', () => {
    expect(Room.availableRooms()).toBe(null)
+   //@ts-ignore
    expect(Room.availableRooms(null, daysAgo(2), daysAgo(1))).toBe(null)
 })
 
 test('availableRooms should return [] if there is an empty array', () => {
-   const rooms = []
+   const rooms: Room[] = []
    expect(Room.availableRooms(rooms)).toEqual([])
    expect(Room.availableRooms(rooms, daysAgo(2))).toEqual([])
    expect(Room.availableRooms(rooms, daysAgo(2), daysAgo(1))).toEqual([])
@@ -343,7 +353,9 @@ test('availableRooms should return [] if there is an empty array', () => {
 })
 
 test('availableRooms should throw an error if there is at least one no-room inside rooms array', () => {
+   //@ts-ignore
    expect(() => Room.availableRooms([{}])).toThrow()
+   //@ts-ignore
    expect(() => Room.availableRooms([new Room(), {}])).toThrow()
 })
 
@@ -420,6 +432,7 @@ test('get fee() should throw an error if the booking is not asociated with a roo
 
 test('get fee() should throw an error if the discount is not an integer', () => {
    const booking = new Booking({ discount: 50.5 })
+   //@ts-ignore
    const booking2 = new Booking({ discount: 'not integer' })
    expect(() => booking.fee).toThrow()
    expect(() => booking2.fee).toThrow()
@@ -427,6 +440,7 @@ test('get fee() should throw an error if the discount is not an integer', () => 
 
 test('get fee() should throw an error if the discount of the room is not an integer', () => {
    const room = new Room({ discount: 200.20 })
+   //@ts-ignore
    const room2 = new Room({ discount: 'not integer' })
    const booking = new Booking({ discount: 10 })
    const booking2 = new Booking({ discount: 10 })
@@ -438,6 +452,7 @@ test('get fee() should throw an error if the discount of the room is not an inte
 
 test('get fee() should throw an error if the price of the room is not an integer', () => {
    const room = new Room({ price: 200.20 })
+   //@ts-ignore
    const room2 = new Room({ price: 'not integer' })
    const booking = new Booking({ discount: 10 })
    const booking2 = new Booking({ discount: 10 })

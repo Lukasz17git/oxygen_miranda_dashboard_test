@@ -1,7 +1,15 @@
 const { v4: nanoid } = require('uuid')
 
-class Booking {
-   constructor({ name = '', email = '', checkIn = new Date(), checkOut = null, discount = 0 } = {}) {
+
+export class Booking {
+   id: string
+   name: string
+   email: string
+   checkIn: Date
+   checkOut: Date | null
+   discount: number
+   room: Room | null
+   constructor({ name = '', email = '', checkIn = new Date(), checkOut = null as null | Date, discount = 0 } = {}) {
       this.id = nanoid()
       this.name = name
       this.email = email
@@ -12,14 +20,14 @@ class Booking {
    }
    get fee() {
       if (!this.room) throw "booking is not assigned to any room, please add it to a room"
-      const isInt = (number) => Number.isInteger(number)
+      const isInt = (number: number) => Number.isInteger(number)
       if (!isInt(this.room.price) || !isInt(this.room.discount) || !isInt(this.discount)) throw "price and discounts should be an integer"
       if (this.room.discount > 100 || this.discount > 100) throw 'discounts should be lower than 100'
       if (this.room.discount < 0 || this.discount < 0 || this.room.price < 0) throw 'discounts and price cant be negative'
       return Math.round((this.room.price * (100 - this.room.discount) * (100 - this.discount)) / 10000)
    }
 
-   addRoom(room) {
+   addRoom(room: Room) {
       if (!(room instanceof Room)) throw `Provided room: ${room} is not an instance of Room class`
       room.addBooking(this)
       return this
@@ -32,8 +40,12 @@ class Booking {
 }
 
 
-
-class Room {
+export class Room {
+   id: string
+   name: string
+   price: number
+   discount: number
+   bookings: Booking[]
    constructor({ name = 'Room', price = 0, discount = 0 } = {}) {
       this.id = nanoid()
       this.name = name
@@ -42,14 +54,14 @@ class Room {
       this.bookings = []
    }
 
-   addBooking(booking) {
+   addBooking(booking: Booking) {
       if (!(booking instanceof Booking)) throw `Provided booking: ${booking} is not an instance of Booking class`
       booking.room = this
       this.bookings.push(booking)
       return this
    }
 
-   addBookings(bookings) {
+   addBookings(bookings: Booking[]) {
       if (!Array.isArray(bookings)) throw 'Bookings should be an array of Bookings'
       for (const booking of bookings) {
          if (!(booking instanceof Booking)) throw `Provided booking: ${booking} is not an instance of Booking class`
@@ -59,7 +71,7 @@ class Room {
       return this
    }
 
-   removeBooking(identifier) {
+   removeBooking(identifier: string | number) {
       if (typeof identifier === 'number') {
          const [removedBooking] = this.bookings.splice(identifier, 1)
          if (removedBooking) removedBooking.room = null
@@ -73,7 +85,7 @@ class Room {
    }
 
 
-   static calculateStartAndEndDayAsInteger(startDate, endDate, timezoneOffsetInMinutes = 120) { // Spain = 120
+   static calculateStartAndEndDayAsInteger(startDate?: Date | number | null, endDate?: Date | number | null, timezoneOffsetInMinutes = 120) { // Spain = 120
 
       // if dates are already as integer day dates, skip and return those
       if (typeof startDate === 'number' && typeof endDate === 'number' && startDate < 100_000 && endDate < 100_000) {
@@ -83,14 +95,15 @@ class Room {
       const timezoneOffset = timezoneOffsetInMinutes * 60 * 1000
 
       // it returns the day number since 01-01-1970 as integer
-      const getDayFromDate = (date) => {
+      const getDayFromDate = (date: Date) => {
          return Math.trunc((date.getTime() + timezoneOffset) / (24 * 60 * 60 * 1000))
       }
 
       const currentDate = new Date()
 
       const validStartDate = startDate instanceof Date ? startDate : currentDate
-      const validEndDate = (endDate instanceof Date && endDate >= startDate) ? endDate : startDate > currentDate ? startDate : currentDate
+      const validEndDate = (endDate instanceof Date && endDate >= validStartDate) ? endDate : validStartDate > currentDate ? validStartDate : currentDate
+      // const validEndDate = (endDate instanceof Date && endDate >= startDate) ? endDate : startDate > currentDate ? startDate : currentDate
 
       const startIntegerDay = getDayFromDate(validStartDate)
       const endIntegerDay = getDayFromDate(validEndDate)
@@ -98,8 +111,8 @@ class Room {
       return [startIntegerDay, endIntegerDay]
    }
 
-   calculateOcupancyMap(startDayAsInteger, endDayAsInteger = startDayAsInteger) {
-      const occupancyMap = {}
+   calculateOcupancyMap(startDayAsInteger: number, endDayAsInteger = startDayAsInteger) {
+      const occupancyMap: Record<string, boolean> = {}
 
       for (const booking of this.bookings) {
          if (!booking.checkIn || !(booking.checkIn instanceof Date)) continue
@@ -120,13 +133,13 @@ class Room {
       return occupancyMap
    }
 
-   isOccupied(date) {
+   isOccupied(date?: Date) {
       const [startDayAsInteger] = Room.calculateStartAndEndDayAsInteger(date)
       const occupancyMap = this.calculateOcupancyMap(startDayAsInteger)
       return !!occupancyMap[startDayAsInteger]
    }
 
-   occupancyPercentage(startDate, endDate) {
+   occupancyPercentage(startDate?: Date | number, endDate?: Date | number) {
       const [startDayAsInteger, endDayAsInteger] = Room.calculateStartAndEndDayAsInteger(startDate, endDate)
       const occupancyMap = this.calculateOcupancyMap(startDayAsInteger, endDayAsInteger)
       const totalDays = endDayAsInteger - startDayAsInteger + 1
@@ -135,7 +148,7 @@ class Room {
       return percentage
    }
 
-   static totalOccupancyPercentage(rooms, startDate, endDate) {
+   static totalOccupancyPercentage(rooms?: Room[], startDate?: Date, endDate?: Date) {
       if (!Array.isArray(rooms) || !rooms.length) return null
       const [startDayAsInteger, endDayAsInteger] = Room.calculateStartAndEndDayAsInteger(startDate, endDate)
       let totalAddedPercentage = 0
@@ -148,7 +161,7 @@ class Room {
       return totalPercentage
    }
 
-   static availableRooms(rooms, startDate, endDate) {
+   static availableRooms(rooms?: Room[], startDate?: Date, endDate?: Date) {
       if (!Array.isArray(rooms)) return null
       const [startDayAsInteger, endDayAsInteger] = Room.calculateStartAndEndDayAsInteger(startDate, endDate)
       const availableRooms = []
@@ -162,4 +175,4 @@ class Room {
 }
 
 
-module.exports = { Room, Booking }
+// module.exports = { Room, Booking }
